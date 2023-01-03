@@ -20,7 +20,7 @@ pragma mmap_size = 17179869184; -- cap mmap at 16GB
 "##;
 
 /// Latest database version
-pub const DB_VERSION: usize = 11;
+pub const DB_VERSION: usize = 12;
 
 /// Schema definition
 const INIT_SQL: &str = formatcp!(
@@ -170,6 +170,9 @@ pub fn upgrade_db(conn: &mut PooledConnection) -> Result<()> {
             }
             if curr_version == 10 {
                 curr_version = mig_10_to_11(conn)?;
+            }
+            if curr_version == 11 {
+                curr_version = mig_11_to_12(conn)?;
             }
 
             if curr_version == DB_VERSION {
@@ -468,4 +471,23 @@ PRAGMA user_version = 11;
         }
     }
     Ok(11)
+}
+
+fn mig_11_to_12(conn: &mut PooledConnection) -> Result<usize> {
+    // TODO: should fields of previous entries be NULL or ""?
+    info!("database schema needs update from 11->12");
+    let upgrade_sql = r##"
+ALTER TABLE event ADD ots VARCHAR(5000);
+PRAGMA user_version = 12;
+"##;
+    match conn.execute_batch(upgrade_sql) {
+        Ok(()) => {
+            info!("database schema upgraded v11 -> v12");
+        }
+        Err(err) => {
+            error!("update failed: {}", err);
+            panic!("database could not be upgraded");
+        }
+    }
+    Ok(12)
 }

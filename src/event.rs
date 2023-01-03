@@ -47,6 +47,9 @@ pub struct Event {
     pub tags: Vec<Vec<String>>,
     pub content: String,
     pub sig: String,
+    // OpenTimestamps field
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ots: Option<String>,
     // Optimization for tag search, built on demand.
     #[serde(skip)]
     pub tagidx: Option<HashMap<char, HashSet<String>>>,
@@ -113,6 +116,7 @@ impl Event {
             content: "".to_owned(),
             sig: "0".to_owned(),
             tagidx: None,
+            ots: None,
         }
     }
 
@@ -414,6 +418,7 @@ mod tests {
             content: "this is a test".to_owned(),
             sig: "abcde".to_owned(),
             tagidx: None,
+            ots: None,
         };
         let c = e.to_canonical();
         let expected = Some(r#"[0,"012345",501234,1,[],"this is a test"]"#.to_owned());
@@ -442,6 +447,7 @@ mod tests {
             content: "this is a test".to_owned(),
             sig: "abcde".to_owned(),
             tagidx: None,
+            ots: None,
         };
         let v = e.tag_values_by_name("e");
         assert_eq!(v, vec!["foo", "bar", "baz"]);
@@ -468,6 +474,7 @@ mod tests {
             content: "this is a test".to_owned(),
             sig: "abcde".to_owned(),
             tagidx: None,
+            ots: None,
         };
         let v = e.tag_values_by_name("x");
         // asking for tags that don't exist just returns zero-length vector
@@ -493,6 +500,7 @@ mod tests {
             content: "this is a test".to_owned(),
             sig: "abcde".to_owned(),
             tagidx: None,
+            ots: None,
         };
         let c = e.to_canonical();
         let expected_json = r###"[0,"012345",501234,1,[["#e","aoeu"],["#p","aaaa","ws://example.com"]],"this is a test"]"###;
